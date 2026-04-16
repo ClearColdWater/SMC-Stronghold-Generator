@@ -1,4 +1,4 @@
-# this file is 100% ai generated.
+# drafted with GPT-5.4
 
 import json
 import math
@@ -648,7 +648,7 @@ def plot_default_report(report, output_dir="plots", show=False):
             title="Debug: logImportanceWeight",
             save_path=output_dir / "debug_nodeLogMeanImportanceWeightDelta.png",
             cmap="magma_r",
-            cmap_range=(0.05, 0.95),
+            cmap_range=(0.05, 1.0),
             norm_type="linear",
             is_prob=False,
             value_fmt=".3f",
@@ -665,7 +665,7 @@ def plot_default_report(report, output_dir="plots", show=False):
             title="Debug: log(1/rESS) from ImportanceWeightDelta",
             save_path=output_dir / "debug_nodeLogInvRelativeESSFromImportanceWeightDelta.png",
             cmap="inferno",
-            cmap_range=(0.05, 0.95),
+            cmap_range=(0.05, 1.0),
             norm_type="linear",
             is_prob=False,
             value_fmt=".3f",
