@@ -1,0 +1,14 @@
+obsolete/
+
+.vscode/
+__pycache__/
+
+build/*
+observations/*
+outputs/*
+plots/*
+
+!build/.gitkeep
+!observations/.gitkeep
+!outputs/.gitkeep
+!plots/.gitkeep
