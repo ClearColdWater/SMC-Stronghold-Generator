@@ -64,8 +64,7 @@ namespace StrongholdStrucures
                 }
 
                 if(nextGenInfo != nullptr)
-                    generationContext.poEvents.reserve(4096);
-                    
+                    generationContext.pendingSets.reserve(512);
             }
 
             order = 0;
@@ -115,22 +114,6 @@ namespace StrongholdStrucures
                 proposal[i] = !firstChildBlockedByLastPlaced(pending[i]);
             return proposal;
         }
-        
-        static double getRaceProb(int a, int b)
-        {
-            static double H[64][64] = {0};
-            static bool init = false;
-            if(!init)
-            {
-                for(int j = 0; j < 64; ++j)H[0][j] = 1.0;
-                for(int i = 1; i < 64; ++i)H[i][0] = 0.0;
-                for(int i = 1; i < 64; ++i)
-                    for(int j = 1; j < 64; ++j)
-                        H[i][j] = 0.5 * (H[i - 1][j] + H[i][j - 1]);
-                init = true;
-            }
-            return H[a][b];
-        }
 
         inline int getPendingObservationIndex(uint32_t pendingIndex) const
         {
@@ -151,65 +134,18 @@ namespace StrongholdStrucures
                 pendingIndexToObservationIndex[i] = getPendingObservationIndex(i);
 
             proposal.resize(leavesCount);
-            if(generationContext.guidingInfo == nullptr)
+            if(generationContext.guidingInfo == nullptr || !generationContext.lastCanAddStructurePiecesResult)
             {
                 std::fill(proposal.begin(), proposal.end(), 1);
                 return proposal;
             }
 
-            /*double maxLogProposal = -std::numeric_limits<double>::infinity();
             for(uint32_t i = 0; i < leavesCount; i++)
             {
-                proposal[i] = 0;
-                if(pendingIndexToObservationIndex[i] == -1)
-                {
-                    proposal[i] += logp5 * leavesCount;
-                    continue;
-                }
-                for(uint32_t j = 0; j < leavesCount; j++)
-                {
-                    if(i == j || pendingIndexToObservationIndex[j] == -1)proposal[i] += logp5;
-                    else proposal[i] += std::log(generationContext.guidingInfo->
-                        pairwisePendingWinRate[pendingIndexToObservationIndex[i]][pendingIndexToObservationIndex[j]]);
-                }
-                maxLogProposal = std::max(maxLogProposal, proposal[i]);
+                int observationIndex = pendingIndexToObservationIndex[i];
+                if(observationIndex == -1)proposal[i] = 1;
+                else proposal[i] = generationContext.guidingInfo->nodeGamma[observationIndex];
             }
-
-            if(!std::isfinite(maxLogProposal))
-            {
-                std::fill(proposal.begin(), proposal.end(), 1.0);
-                return proposal;
-            }
-
-            for(uint32_t i = 0; i < pending.size(); i++)
-                proposal[i] = std::exp(proposal[i] - maxLogProposal);
-
-            static int cnt = 0;
-            cnt++;
-            if(cnt % 100000 == 0)
-            {
-                for(uint32_t i = 0; i < pending.size(); i++)
-                    std::cerr << proposal[i] << ' ';
-                std::cerr << std::endl;
-            }*/
-            
-
-            for(uint32_t i = 0; i < leavesCount; i++)
-            {
-                proposal[i] = 0;
-                if(pendingIndexToObservationIndex[i] == -1)
-                {
-                    proposal[i] += 0.5 * leavesCount;
-                    continue;
-                }
-                for(uint32_t j = 0; j < leavesCount; j++)
-                {
-                    if(i == j || pendingIndexToObservationIndex[j] == -1)proposal[i] += 0.5;
-                    else proposal[i] += generationContext.guidingInfo->
-                        pairwisePendingWinRate[pendingIndexToObservationIndex[i]][pendingIndexToObservationIndex[j]];
-                }/**/
-            }
-                
             return proposal;
         }
         
@@ -250,18 +186,28 @@ namespace StrongholdStrucures
                     double deltaImportanceWeightType = std::log(sum) - std::log(sumBeforeType) - std::log(typePriorityProposal[i]);
                     generationContext.pendingTypePriorityAuxCarry -= deltaImportanceWeightType;
 
-                    if(generationContext.nextGenInfo != nullptr)[[likely]]
+                    if(generationContext.lastCanAddStructurePiecesResult && generationContext.nextGenInfo != nullptr)
                     {
-                        uint8_t comparableCount = 0;
-                        for(uint32_t j = 0; j < leavesCount; j++)
-                            if(j != i && pendingIndexToObservationIndex[j] != -1)
-                                comparableCount++;
-
-                        if(comparableCount == 0)return i;
-                        for(uint32_t j = 0; j < leavesCount; j++)
+                        uint32_t eligibleCount = 0, eligibleObservedCount = 0;
+                        for(uint32_t j = 0; j < leavesCount; j++) // hopefully SIMD and fast
                         {
-                            if(i == j || pendingIndexToObservationIndex[i] == -1 || pendingIndexToObservationIndex[j] == -1)continue;
-                            generationContext.poEvents.push_back(pendingIndexToObservationIndex[i], pendingIndexToObservationIndex[j], comparableCount);
+                            bool eligible = nextPieceProposal[j] > 0;
+                            eligibleCount += eligible;
+                            eligibleObservedCount += eligible && (pendingIndexToObservationIndex[j] != -1);
+                        }
+                        
+                        if(eligibleCount >= 2 && eligibleObservedCount > 0)
+                        {
+                            auto& newPendingSet = generationContext.pendingSets.sets.emplace_back();
+                            for(uint32_t j = 0; j < leavesCount; j++)
+                            {
+                                if(nextPieceProposal[j] == 0)continue;
+                                int observationIndex = pendingIndexToObservationIndex[j];
+                                if(observationIndex != -1)newPendingSet.exists.set(observationIndex);
+                                else newPendingSet.unobservedCount++;
+                            }
+                            if(pendingIndexToObservationIndex[i] != -1)
+                            generationContext.pendingSets.winnerCount[pendingIndexToObservationIndex[i]]++;
                         }
                     }
                     
@@ -287,7 +233,7 @@ namespace StrongholdStrucures
                 return finished = true;
             }
 
-            generationContext.pendingTypePriorityAuxCarry *= 0.9;
+            generationContext.pendingTypePriorityAuxCarry *= 0.933;
 
             std::vector<uint32_t>& pending = generationContext.pendingChildren;
             if(pending.empty())

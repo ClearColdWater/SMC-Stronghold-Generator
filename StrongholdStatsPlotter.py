@@ -216,6 +216,15 @@ def format_prob_cell(p):
         return f"{p * 100:.2f}%"
     return f"{p * 100:.4f}%"
 
+def make_count_extra_label(appearance=None, wins=None):
+    def _fn(i, node):
+        parts = []
+        if appearance is not None and np.isfinite(appearance[i]):
+            parts.append(f"a={int(round(float(appearance[i])))}")
+        if wins is not None and np.isfinite(wins[i]):
+            parts.append(f"w={int(round(float(wins[i])))}")
+        return "\n".join(parts) if parts else None
+    return _fn
 
 def shorten_type_name(typ):
     if typ == "FIVE_WAY_CROSSING":
@@ -617,6 +626,17 @@ def plot_default_report(report, output_dir="plots", show=False):
     plotter = TreePlotter(obs_nodes)
     debug_log_importance = get_debug_values(report, "nodeLogMeanImportanceWeightDelta")
     debug_delta_var = get_debug_values(report, "nodeImportanceWeightDeltaVariance")
+    debug_gamma = get_debug_values(report, "nodeGamma")
+    debug_log_gamma = get_debug_values(report, "nodeLogGamma")
+    debug_win_count = get_debug_values(report, "nodeWinCount")
+    debug_appearance_count = get_debug_values(report, "nodeAppearanceCount")
+
+    debug_empirical_win_rate = None
+    if debug_win_count is not None and debug_appearance_count is not None:
+        debug_empirical_win_rate = np.full_like(debug_win_count, np.nan)
+        mask = np.isfinite(debug_appearance_count) & (debug_appearance_count > 0)
+        debug_empirical_win_rate[mask] = debug_win_count[mask] / debug_appearance_count[mask]
+    
     debug_log_inv_ress = None
     if debug_log_importance is not None and debug_delta_var is not None:
         debug_log_inv_ress = np.full_like(debug_delta_var, np.nan)
@@ -691,6 +711,71 @@ def plot_default_report(report, output_dir="plots", show=False):
             nan_color="#E6E6E6",
             vmin=0.0,
             show_edge_slot=True,
+            show=show
+        )
+
+    if debug_log_gamma is not None and np.isfinite(debug_log_gamma).any():
+        vmax_abs = float(np.nanmax(np.abs(debug_log_gamma[np.isfinite(debug_log_gamma)])))
+        vmax_abs = max(vmax_abs, 1e-6)
+
+        plotter.draw_metric(
+            debug_log_gamma,
+            np.full_like(debug_log_gamma, np.nan),
+            title="Debug: learned log(gamma)",
+            save_path=output_dir / "debug_nodeLogGamma.png",
+            cmap="coolwarm",
+            cmap_range=(0.0, 1.0),
+            norm_type="linear",
+            is_prob=False,
+            value_fmt=".3f",
+            colorbar_label="log(gamma)",
+            nan_color="#E6E6E6",
+            vmin=-vmax_abs,
+            vmax=vmax_abs,
+            show_edge_slot=True,
+            extra_label_fn=make_count_extra_label(debug_appearance_count, debug_win_count),
+            show=show
+        )
+
+    if debug_gamma is not None:
+        plotter.draw_metric(
+            debug_gamma,
+            np.full_like(debug_gamma, np.nan),
+            title="Debug: learned gamma",
+            save_path=output_dir / "debug_nodeGamma.png",
+            cmap="coolwarm",
+            cmap_range=(0.0, 1.0),
+            norm_type="log",
+            is_prob=False,
+            value_fmt=".3f",
+            colorbar_label="gamma",
+            nan_color="#E6E6E6",
+            vmin=1e-1,
+            vmax=1e+1,
+            show_edge_slot=True,
+            extra_label_fn=make_count_extra_label(debug_appearance_count, debug_win_count),
+            plain_log_colorbar_labels=True,
+            show=show
+        )
+
+    if debug_empirical_win_rate is not None:
+        plotter.draw_metric(
+            debug_empirical_win_rate,
+            np.full_like(debug_empirical_win_rate, np.nan),
+            title="Debug: empirical win rate among pending-set appearances",
+            save_path=output_dir / "debug_nodeEmpiricalWinRate.png",
+            cmap="inferno",
+            cmap_range=(0.05, 1.0),
+            norm_type="power",
+            gamma=0.5,
+            is_prob=True,
+            value_fmt=".3f",
+            colorbar_label="Win Rate",
+            nan_color="#E6E6E6",
+            vmin=0.0,
+            vmax=1.0,
+            show_edge_slot=True,
+            extra_label_fn=make_count_extra_label(debug_appearance_count, debug_win_count),
             show=show
         )
 

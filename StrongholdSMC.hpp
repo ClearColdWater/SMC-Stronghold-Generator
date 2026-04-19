@@ -1,6 +1,7 @@
 #pragma once
 
 #include"StrongholdStructure.hpp"
+#include"StrongholdGammaMM.hpp"
 #include<thread>
 #include"omp.h"
 
@@ -9,6 +10,54 @@ namespace StrongholdSMC
     using namespace utils;
     using namespace StrongholdStrucures;
     using namespace StrongholdAuxiliary;
+
+    static inline void appendPendingSetCount(std::vector<PendingSetCount>& pendingSets, PendingSetCount&& nextSet)
+    {
+        if(!pendingSets.empty() && pendingSets.back() == nextSet)
+            pendingSets.back().count += nextSet.count;
+        else
+            pendingSets.emplace_back(std::move(nextSet));
+    }
+    static inline std::vector<PendingSetCount> mergeTwoSortedPendingSetCounts(
+        std::vector<PendingSetCount>&& pendingSetsA,
+        std::vector<PendingSetCount>&& pendingSetsB
+    ){
+        std::vector<PendingSetCount> out;
+        out.reserve(pendingSetsA.size() + pendingSetsB.size());
+        size_t i = 0, j = 0;
+        while(i < pendingSetsA.size() && j < pendingSetsB.size())
+        {
+            if(pendingSetsA[i] < pendingSetsB[j])
+            {
+                appendPendingSetCount(out, std::move(pendingSetsA[i]));
+                i++;
+            }
+            else if(pendingSetsB[j] < pendingSetsA[i])
+            {
+                appendPendingSetCount(out, std::move(pendingSetsB[j]));
+                j++;
+            }
+            else
+            {
+                pendingSetsA[i].count += pendingSetsB[j].count;
+                appendPendingSetCount(out, std::move(pendingSetsA[i]));
+                i++;
+                j++;
+            }
+        }
+        while(i < pendingSetsA.size())
+        {
+            appendPendingSetCount(out, std::move(pendingSetsA[i]));
+            i++;
+        }
+        while(j < pendingSetsB.size())
+        {
+            appendPendingSetCount(out, std::move(pendingSetsB[j]));
+            j++;
+        }
+        return out;
+    }
+
     struct StrongholdBatch 
     {
         std::vector<Stronghold<observationGuided>> stronghold[2];
@@ -40,17 +89,20 @@ namespace StrongholdSMC
             }
 
             for(uint32_t i = 1; i < nextGenInfos.size(); i++)
-                for(uint32_t j = 0; j < 1024; j++)
-                    for(uint32_t k = 0; k < 1024; k++)
-                    {
-                        nextGenInfos[0].pairwisePendingWinRate[j][k] += nextGenInfos[i].pairwisePendingWinRate[j][k];
-                        nextGenInfos[0].pairwiseTotalOmega[j][k] += nextGenInfos[i].pairwiseTotalOmega[j][k];
-                    }
-                        
+                for(uint32_t j = 0; j < nodeCount; j++)
+                    nextGenInfos[0].winCount[j] += nextGenInfos[i].winCount[j];
+
+            for(uint32_t stepSize = 1; stepSize < nextGenInfos.size(); stepSize <<= 1)
+            {
+                #pragma omp parallel for schedule(static, 1)
+                for(int j = 0; j < static_cast<int>(nextGenInfos.size() - stepSize); j += (stepSize << 1))
+                    nextGenInfos[j].pendingSets = mergeTwoSortedPendingSetCounts(std::move(nextGenInfos[j].pendingSets), std::move(nextGenInfos[j + stepSize].pendingSets));
+            }
 
             nextGenInfos[0].build(nodeCount);
+            nextGenInfos[0].fitGammaMM(nodeCount);
         }
-        void contributeWinRates()
+        void contributeInfo()
         {
             auto& strongholds = get();
 
@@ -58,14 +110,19 @@ namespace StrongholdSMC
             for(uint32_t i = 0; i < strongholds.size(); i++)
             {
                 int tid = omp_get_thread_num();
-                const auto& events = strongholds[i].generationContext.poEvents;
-                for(uint32_t j = 0; j < events.winnerObservationIndex.size(); j++)
-                {
-                    double count = 1.0 / events.splitCount[j];
-                    nextGenInfos[tid].pairwisePendingWinRate[events.winnerObservationIndex[j]][events.loserObservationIndex[j]] += count;
-                    nextGenInfos[tid].pairwiseTotalOmega[events.winnerObservationIndex[j]][events.loserObservationIndex[j]] += count;
-                    nextGenInfos[tid].pairwiseTotalOmega[events.loserObservationIndex[j]][events.winnerObservationIndex[j]] += count;
-                }
+                
+                for(uint32_t j = 0; j < observation->tree.totalNodes; j++)
+                    nextGenInfos[tid].winCount[j] += strongholds[i].generationContext.pendingSets.winnerCount[j];
+
+                for(uint32_t j = 0; j < strongholds[i].generationContext.pendingSets.sets.size(); j++)
+                    nextGenInfos[tid].pendingSets.push_back({1, strongholds[i].generationContext.pendingSets.sets[j]});
+            }
+
+            #pragma omp parallel for schedule(static, 1)
+            for(uint32_t i = 0; i < nextGenInfos.size(); i++)
+            {
+                int tid = omp_get_thread_num();
+                std::sort(nextGenInfos[tid].pendingSets.begin(), nextGenInfos[tid].pendingSets.end());
             }
         }
         inline StrongholdAuxiliaryInfo getNextInfo() {return nextGenInfos[0];}
@@ -273,13 +330,13 @@ namespace StrongholdSMC
                     << " | True Unique Ancestors: " << uniqueAncestors << std::endl;
             }
 
-            contributeWinRates();
+            contributeInfo();
             combineInfos();
             return true;
         }
 
         bool generateStrongholdsWithBootstrapInfo(
-            const StrongholdObservation* strongholdObservation, uint32_t epochs = 3,
+            const StrongholdObservation* strongholdObservation, uint32_t epochs = 12,
             uint32_t initN = 2048, double resampleThreshold = 0.8, uint64_t seed = 42,
             const StrongholdAuxiliaryInfo* guidingStrongholdInfo = nullptr // in case multiple runs was needed
         );

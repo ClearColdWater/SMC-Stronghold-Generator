@@ -7,11 +7,14 @@
 #include<cstring>
 #include<limits>
 #include<algorithm>
+#include"omp.h"
+#include"PendingBitset.hpp"
 
 namespace StrongholdAuxiliary
 {
     static constexpr double minSampleSize = 8, smoothDelta = -1.6094379124341003; // = std::log(0.2)
     using namespace StrongholdObservations;
+    
     struct StrongholdAuxiliaryInfo
     {
         static inline double LogSumExp(double a, double b)
@@ -27,8 +30,10 @@ namespace StrongholdAuxiliary
         double nodeImportanceWeightDeltaVariance[1024];
         double nodeTotalOmega[1024];
 
-        double pairwisePendingWinRate[1024][1024]; // keeps sum temporarily
-        double pairwiseTotalOmega[1024][1024];
+        std::vector<PendingSetCount> pendingSets;
+        std::vector<uint32_t> apperanceIndexes[1024];
+        uint64_t winCount[1024];
+        double nodeGamma[1024];
 
         double totalLogImportanceDebt;
 
@@ -38,8 +43,11 @@ namespace StrongholdAuxiliary
             std::fill(nodeLogMeanImportanceWeightDeltaSq, nodeLogMeanImportanceWeightDeltaSq + 1024, -std::numeric_limits<double>::infinity());
             std::memset(nodeImportanceWeightDeltaVariance, 0, sizeof(nodeImportanceWeightDeltaVariance));
             std::memset(nodeTotalOmega, 0, sizeof(nodeTotalOmega));
-            std::fill(&pairwisePendingWinRate[0][0], &pairwisePendingWinRate[0][0] + 1024 * 1024, 4.0);
-            std::fill(&pairwiseTotalOmega[0][0], &pairwiseTotalOmega[0][0] + 1024 * 1024, 8.0);
+
+            pendingSets.clear();
+            std::memset(winCount, 0, sizeof(winCount));
+            std::fill(nodeGamma, nodeGamma + 1024, 1.0);
+
             totalLogImportanceDebt = 0;
         }
         StrongholdAuxiliaryInfo(){ clear(); }
@@ -72,10 +80,6 @@ namespace StrongholdAuxiliary
                         std::exp(logMean2) * std::expm1(logMeanSq - logMean2);
             }
 
-            for(uint32_t i = 0; i < nodeCount; i++)
-                for(uint32_t j = 0; j < nodeCount; j++)
-                    pairwisePendingWinRate[i][j] /= pairwiseTotalOmega[i][j];
-
             nodeLogMeanImportanceWeightDelta[0] = 0;
             nodeLogMeanImportanceWeightDelta[1] = 0;
             nodeLogMeanImportanceWeightDeltaSq[0] = 0;
@@ -84,7 +88,19 @@ namespace StrongholdAuxiliary
             nodeImportanceWeightDeltaVariance[1] = 0;
             for(uint32_t i = 0; i < nodeCount; i++)
                 totalLogImportanceDebt += nodeLogMeanImportanceWeightDelta[i];
+
+            for(uint32_t i = 0; i < nodeCount; i++)
+                apperanceIndexes[i].clear();
+
+            for(uint32_t i = 0; i < pendingSets.size(); i++)
+            {
+                pendingSets[i].set.exists.forEachSetBit([&, i](uint32_t nodeIndex){
+                    apperanceIndexes[nodeIndex].emplace_back(i);
+                });
+            }
         }
+
+        bool fitGammaMM(uint32_t nodeCount, double lambda = 5.0);
 
         void makeInfoFromObservation(const StrongholdObservation* observation)
         {
@@ -114,10 +130,6 @@ namespace StrongholdAuxiliary
 
             for(uint32_t i = 0; i < observation->tree.totalNodes; i++)
                 totalLogImportanceDebt += nodeLogMeanImportanceWeightDelta[i];
-
-            for(uint32_t i = 0; i < observation->tree.totalNodes; i++)
-                for(uint32_t j = 0; j < observation->tree.totalNodes; j++)
-                    pairwisePendingWinRate[i][j] /= pairwiseTotalOmega[i][j];
         }
     };
 }

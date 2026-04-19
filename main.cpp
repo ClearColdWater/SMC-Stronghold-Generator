@@ -14,13 +14,13 @@ int main()
 {
     // generates approximately particleCount * runs strongholds in total. 
     // the actual stronghold count varies very slightly due to the nature of the chopthin algorithm.
-    constexpr uint32_t particleCount = 32768;
+    constexpr uint32_t particleCount = 20480; // memory requirement jumps because of the Plackett-Luce typePriorityProposal gamma model
     constexpr uint32_t runs = 4; 
-    constexpr uint32_t nodeCount = 40; // total concrete rooms observed in the observation.
+    constexpr uint32_t nodeCount = 50; // total concrete rooms observed in the observation.
     constexpr bool excludePortalRoom = false; // generateObservation will explicitly exclude portal room from the observation generated.
 
     std::random_device rd;
-    uint64_t seed = 42; //(static_cast<uint64_t>(rd()) << 32) | rd(); 
+    uint64_t seed = 42; //(static_cast<uint64_t>(rd()) << 32) | rd(); 10191517399343550686ULL
     StrongholdObservation observation = generateObservation(seed, nodeCount, excludePortalRoom);
     cout << "observation generated with seed " << seed << endl;
     ostringstream oss;
@@ -40,7 +40,7 @@ int main()
         auto t1 = std::chrono::high_resolution_clock::now();
         bool success = batch.generateStrongholdsWithBootstrapInfo(
             &observation,
-            (i == 0 ? 4 : 1),
+            (i == 0 ? 12 : 1), // more epochs to help the new gamma model get on track
             particleCount,
             0.5,
             42 + i,

@@ -310,6 +310,7 @@ namespace StrongholdStatistics
         if(debugInfo != nullptr)
         {
             json perNodeDebug = json::object();
+
             json deltaArr = json::array();
             for(uint32_t i = 0; i < observation.tree.totalNodes; i++)
                 deltaArr.push_back(jsonNumberOrNull(debugInfo->nodeLogMeanImportanceWeightDelta[i]));
@@ -319,8 +320,44 @@ namespace StrongholdStatistics
             for(uint32_t i = 0; i < observation.tree.totalNodes; i++)
                 varianceArr.push_back(jsonNumberOrNull(debugInfo->nodeImportanceWeightDeltaVariance[i]));
             perNodeDebug["nodeImportanceWeightDeltaVariance"] = varianceArr;
-            
+
+            json gammaArr = json::array();
+            json logGammaArr = json::array();
+            json winCountArr = json::array();
+            json appearanceCountArr = json::array();
+
+            uint64_t totalPendingEvents = 0;
+            for(const auto& setCount : debugInfo->pendingSets)
+                totalPendingEvents += setCount.count;
+
+            for(uint32_t i = 0; i < observation.tree.totalNodes; i++)
+            {
+                double g = debugInfo->nodeGamma[i];
+                gammaArr.push_back(jsonNumberOrNull(g));
+
+                if(std::isfinite(g) && g > 0.0)
+                    logGammaArr.push_back(json(std::log(g)));
+                else
+                    logGammaArr.push_back(json(nullptr));
+
+                winCountArr.push_back(debugInfo->winCount[i]);
+
+                uint64_t appearanceCount = 0;
+                for(uint32_t setId : debugInfo->apperanceIndexes[i])
+                    appearanceCount += debugInfo->pendingSets[setId].count;
+                appearanceCountArr.push_back(appearanceCount);
+            }
+
+            perNodeDebug["nodeGamma"] = gammaArr;
+            perNodeDebug["nodeLogGamma"] = logGammaArr;
+            perNodeDebug["nodeWinCount"] = winCountArr;
+            perNodeDebug["nodeAppearanceCount"] = appearanceCountArr;
+
             j["debugPerNode"] = perNodeDebug;
+            j["debugSummary"] = {
+                {"uniquePendingSets", debugInfo->pendingSets.size()},
+                {"totalPendingEvents", totalPendingEvents}
+            };
         }
 
         j["overall"] = {

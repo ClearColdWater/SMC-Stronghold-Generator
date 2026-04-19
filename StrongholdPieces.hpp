@@ -18,6 +18,7 @@
 #include"StrongholdObservations.hpp"
 #include"StrongholdPieceInfo.hpp"
 #include"StrongholdAuxiliaryInfo.hpp"
+#include"PendingBitset.hpp"
 
 namespace StrongholdPieces
 {
@@ -33,6 +34,7 @@ namespace StrongholdPieces
 		uint32_t priorInstancesSpawned[16];
 		uint32_t totalWeight;
 		bool portalRoomGenerated;
+		bool lastCanAddStructurePiecesResult;
 
 		const StrongholdObservation* observation;
 		double logImportanceWeight;
@@ -41,33 +43,19 @@ namespace StrongholdPieces
 		const StrongholdAuxiliaryInfo* guidingInfo;
 		StrongholdAuxiliaryInfo* nextGenInfo; // shared but thread_local
 
-		struct partialOrderEvents
+		struct PendingSets
 		{
-			std::vector<uint16_t> winnerObservationIndex;
-			std::vector<uint16_t> loserObservationIndex;
-			std::vector<uint8_t> splitCount;
-
-			inline void push_back(uint16_t winner, uint16_t loser, uint8_t splits)
-			{
-				winnerObservationIndex.push_back(winner);
-				loserObservationIndex.push_back(loser);
-				splitCount.push_back(splits);
-			}
+			std::vector<PendingSet> sets; // by observation index
+			uint64_t winnerCount[1024];
 
 			inline void clear()
 			{
-				winnerObservationIndex.clear();
-				loserObservationIndex.clear();
-				splitCount.clear();
+				sets.clear();
+				memset(winnerCount, 0, sizeof(winnerCount));
 			}
 
-			inline void reserve(uint32_t size)
-			{
-				winnerObservationIndex.reserve(size);
-				loserObservationIndex.reserve(size);
-				splitCount.reserve(size);
-			}
-		}poEvents;
+			inline void reserve(uint32_t size){ sets.reserve(size); }
+		}pendingSets;
 
 		double omega;
 		double remainingLogImportanceDebt;
@@ -76,7 +64,7 @@ namespace StrongholdPieces
 		{
 			nextId = 0;
 			availablePieceList.clear();
-			poEvents.clear();
+			pendingSets.clear();
 			
 			totalWeight = 0;
 			forcedNextPieceType = NONE;
@@ -86,6 +74,7 @@ namespace StrongholdPieces
 			existingBoxes.clear();
 			
 			portalRoomGenerated = false;
+			lastCanAddStructurePiecesResult = true;
 
 			observation = nullptr;
 			logImportanceWeight = 0;
@@ -794,6 +783,7 @@ namespace StrongholdPieces
         
 		auto& list = context.availablePieceList;
 		bool canAddStructurePieces = context.canAddStructurePieces();
+		context.lastCanAddStructurePiecesResult = canAddStructurePieces;
 
 		if(canAddStructurePieces)
 		{
