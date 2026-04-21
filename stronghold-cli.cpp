@@ -13,6 +13,8 @@ using namespace StrongholdObservations;
 using namespace StrongholdStatistics;
 namespace fs = std::filesystem;
 
+constexpr string version = "v0.1.0-beta.1";
+
 static uint64_t makeRandomSeed()
 {
     std::random_device rd;
@@ -144,9 +146,12 @@ int main(int argc, char** argv)
         string plotsDir;
 
         bool showHelp = false;
+        bool showVersion = false;
 
         auto cli = 
             lyra::help(showHelp) |
+            lyra::opt(showVersion)["--version"].optional()
+                ("show version and exit.") |
             lyra::opt(demoMode)["--demo"].optional()
                 ("demo mode: get an observation from a random stronghold, then sample for it.") |
             lyra::opt(plotAfter)["--plot"].optional()
@@ -211,6 +216,11 @@ int main(int argc, char** argv)
         if(showHelp)
         {
             cout << cli << endl;
+            return 0;
+        }
+        if(showVersion)
+        {
+            cout << version << endl;
             return 0;
         }
 

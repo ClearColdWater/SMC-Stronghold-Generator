@@ -137,8 +137,6 @@ jobs:
           Copy-Item "build\libwinpthread-1.dll" $pkgDir
           Copy-Item "build\libgomp-1.dll" $pkgDir
           Copy-Item "pyinstaller-dist\stronghold-plotter.exe" $pkgDir
-          Copy-Item "StrongholdStatsPlotter.py" $pkgDir
-          Copy-Item "requirements.txt" $pkgDir
           Copy-Item "README.md" $pkgDir
           Copy-Item "LICENSE" $pkgDir
           Copy-Item "THIRD_PARTY_NOTICES.txt" $pkgDir
