@@ -1,0 +1,229 @@
+This project is licensed under the MIT License.
+This file lists third-party components that are:
+- included directly in this repository,
+- bundled in certain binary distributions, or
+- required to build or run certain plotter distributions.
+Not every release artifact contains every component listed below.
+The "applies to" field indicates when a component is relevant.
+Full license texts are provided in the licenses/ directory.
+=======================================
+Repository-included C++ dependencies
+=======================================
+Lyra
+- applies to: all source and binary distributions
+- origin: https://github.com/bfgroup/Lyra
+- license: BSL-1.0
+- full license can be found in:
+  - licenses/lyra/LICENSE
+nlohmann/json
+- applies to: all source and binary distributions
+- origin: https://github.com/nlohmann/json
+- license: MIT
+- full license can be found in:
+  - licenses/nlohmann/json/LICENSE
+====================================
+Windows bundled runtime libraries
+====================================
+GCC runtime libraries
+- applies to: Windows binary releases built with MSYS2 UCRT64
+- origin: https://gcc.gnu.org/
+- source package: mingw-w64-ucrt-x86_64-gcc-libs
+- version: 15.2.0-14
+- bundled files:
+  - libstdc++-6.dll
+  - libgcc_s_seh-1.dll
+  - libgomp-1.dll
+- license: GPL-3.0-or-later WITH GCC Runtime Library Exception 3.1
+- full license texts can be found in:
+  - licenses/gcc-libs/COPYING3
+  - licenses/gcc-libs/COPYING.RUNTIME
+winpthreads runtime
+- applies to: Windows binary releases built with MSYS2 UCRT64
+- origin: https://www.mingw-w64.org/
+- source package: mingw-w64-ucrt-x86_64-libwinpthread
+- version: 14.0.0.r14.g4761eabdd-1
+- bundled files:
+  - libwinpthread-1.dll
+- license: MIT AND BSD-3-Clause-Clear
+- full license can be found in:
+  - licenses/libwinpthread/COPYING
+
+===============================
+Plotter runtime dependencies
+===============================
+
+The following components are used by the Python-based plotter.
+For Linux/macOS releases, these are typically user-installed runtime
+dependencies for the script-based plotter.
+For Windows releases, these components are used in the bundled prebuilt
+plotter executable and/or the environment used to build that executable.
+
+Python
+- applies to:
+  - script-based plotter releases on Linux/macOS
+  - prebuilt Windows plotter releases
+- origin: https://www.python.org/
+- license: Python Software Foundation License
+- full license can be found in:
+  - licenses/python/LICENSE.txt
+
+NumPy
+- applies to:
+  - script-based plotter releases on Linux/macOS
+  - prebuilt Windows plotter releases
+- origin: https://numpy.org/
+- version: 2.4.4
+- license: multiple notices; see included license text
+- full license can be found in:
+  - licenses/numpy/LICENSE.txt
+
+Matplotlib
+- applies to:
+  - script-based plotter releases on Linux/macOS
+  - prebuilt Windows plotter releases
+- origin: https://matplotlib.org/
+- version: 3.10.8
+- license: see included license text
+- full license can be found in:
+  - licenses/matplotlib/LICENSE
+
+contourpy
+- applies to:
+  - script-based plotter releases on Linux/macOS
+  - prebuilt Windows plotter releases
+- origin: https://github.com/contourpy/contourpy
+- version: 1.3.3
+- license: BSD-style; see included license text
+- full license can be found in:
+  - licenses/contourpy/LICENSE
+
+cycler
+- applies to:
+  - script-based plotter releases on Linux/macOS
+  - prebuilt Windows plotter releases
+- origin: https://matplotlib.org/cycler/
+- version: 0.12.1
+- license: BSD-style; see included license text
+- full license can be found in:
+  - licenses/cycler/LICENSE
+
+fonttools
+- applies to:
+  - script-based plotter releases on Linux/macOS
+  - prebuilt Windows plotter releases
+- origin: https://github.com/fonttools/fonttools
+- version: 4.62.1
+- license: MIT and bundled third-party notices; see included license texts
+- full license texts can be found in:
+  - licenses/fonttools/LICENSE
+  - licenses/fonttools/LICENSE.external
+
+kiwisolver
+- applies to:
+  - script-based plotter releases on Linux/macOS
+  - prebuilt Windows plotter releases
+- origin: https://github.com/nucleic/kiwi
+- version: 1.5.0
+- license: BSD-style; see included license text
+- full license can be found in:
+  - licenses/kiwisolver/LICENSE
+
+packaging
+- applies to:
+  - script-based plotter releases on Linux/macOS
+  - prebuilt Windows plotter releases
+- origin: https://github.com/pypa/packaging
+- version: 26.1
+- license: multiple notices; see included license texts
+- full license texts can be found in:
+  - licenses/packaging/LICENSE
+  - licenses/packaging/LICENSE.APACHE
+  - licenses/packaging/LICENSE.BSD
+
+Pillow
+- applies to:
+  - script-based plotter releases on Linux/macOS
+  - prebuilt Windows plotter releases
+- origin: https://python-pillow.github.io/
+- version: 12.2.0
+- license: see included license text
+- full license can be found in:
+  - licenses/pillow/LICENSE
+
+pyparsing
+- applies to:
+  - script-based plotter releases on Linux/macOS
+  - prebuilt Windows plotter releases
+- origin: https://github.com/pyparsing/pyparsing/
+- version: 3.3.2
+- license: MIT
+- full license can be found in:
+  - licenses/pyparsing/LICENSE
+
+python-dateutil
+- applies to:
+  - script-based plotter releases on Linux/macOS
+  - prebuilt Windows plotter releases
+- origin: https://github.com/dateutil/dateutil
+- version: 2.9.0.post0
+- license: multiple notices; see included license text
+- full license can be found in:
+  - licenses/python-dateutil/LICENSE
+
+six
+- applies to:
+  - script-based plotter releases on Linux/macOS
+  - prebuilt Windows plotter releases
+- origin: https://github.com/benjaminp/six
+- version: 1.17.0
+- license: MIT
+- full license can be found in:
+  - licenses/six/LICENSE
+
+================================================
+Windows prebuilt plotter packaging components
+================================================
+
+The following components are relevant to the bundled prebuilt Windows plotter
+distribution.
+
+PyInstaller
+- applies to: prebuilt Windows plotter releases
+- origin: https://pyinstaller.org/
+- version: 6.19.0
+- license: see included license text
+- full license can be found in:
+  - licenses/pyinstaller/COPYING.txt
+
+pyinstaller-hooks-contrib
+- applies to: prebuilt Windows plotter releases
+- origin: https://github.com/pyinstaller/pyinstaller-hooks-contrib
+- version: 2026.4
+- license: multiple notices; see included license text
+- full license can be found in:
+  - licenses/pyinstaller-hooks-contrib/LICENSE
+
+altgraph
+- applies to: prebuilt Windows plotter releases
+- origin: https://altgraph.readthedocs.io
+- version: 0.17.5
+- license: MIT
+- full license can be found in:
+  - licenses/altgraph/LICENSE
+
+pefile
+- applies to: prebuilt Windows plotter releases
+- origin: https://github.com/erocarrera/pefile
+- version: 2024.8.26
+- license: MIT
+- full license can be found in:
+  - licenses/pefile/LICENSE
+
+pywin32-ctypes
+- applies to: prebuilt Windows plotter releases
+- origin: https://github.com/enthought/pywin32-ctypes
+- version: 0.2.3
+- license: BSD-3-Clause
+- full license can be found in:
+  - licenses/pywin32-ctypes/LICENSE.txt
+
