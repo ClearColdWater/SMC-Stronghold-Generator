@@ -10,7 +10,7 @@
 #include<variant>
 #include<array>
 #include<cassert>
-#include<utility>
+#include"UnreachableWrapper.hpp"
 #include"MutableBoundingBox.hpp"
 #include"Directions.hpp"
 #include"AbstractStrongholdPieces.hpp"
@@ -485,7 +485,7 @@ namespace StrongholdPieces
 			case 10:return &std::get<10>(piece);
 			case 11:return &std::get<11>(piece);
 			case 12:return &std::get<12>(piece);
-			default:std::unreachable();
+			default:wrapped_unreachable();
 		}
 	}
 
@@ -506,7 +506,7 @@ namespace StrongholdPieces
 			case 10:return &std::get<10>(piece);
 			case 11:return &std::get<11>(piece);
 			case 12:return &std::get<12>(piece);
-			default:std::unreachable();
+			default:wrapped_unreachable();
 		}
 	}
 	

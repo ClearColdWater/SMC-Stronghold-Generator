@@ -9,7 +9,7 @@ jobs:
   windows-ucrt64:
     name: Windows x64 (MSYS2 UCRT64, OpenMP ON)
     runs-on: windows-latest
-    timeout-minutes: 1
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -20,6 +20,7 @@ jobs:
         with:
           msystem: UCRT64
           update: true
+          cache: true
           install: >-
             mingw-w64-ucrt-x86_64-gcc
             mingw-w64-ucrt-x86_64-cmake
@@ -40,7 +41,7 @@ jobs:
   linux-gcc:
     name: Linux x64 (GCC, OpenMP ON)
     runs-on: ubuntu-22.04
-    timeout-minutes: 1
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -63,7 +64,7 @@ jobs:
   macos-noomp:
     name: macOS (OpenMP OFF)
     runs-on: macos-14
-    timeout-minutes: 1
+    timeout-minutes: 10
 
     steps:
       - name: Checkout

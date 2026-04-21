@@ -6,16 +6,6 @@ on:
   pull_request:
 
 jobs:
-  build-cpp:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build C++
-        run: |
-          mkdir -p build
-          g++ main.cpp -fopenmp -std=c++23 -O3 -Wall -Wextra -Wshadow -pedantic -o build/main.exe
-
   check-python:
     runs-on: ubuntu-latest
     steps:
