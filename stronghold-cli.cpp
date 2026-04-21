@@ -13,7 +13,7 @@ using namespace StrongholdObservations;
 using namespace StrongholdStatistics;
 namespace fs = std::filesystem;
 
-constexpr string version = "v0.1.0-beta.1";
+const string version = "v0.1.0-beta.1";
 
 static uint64_t makeRandomSeed()
 {
