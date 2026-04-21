@@ -1,4 +1,9 @@
 obsolete/
+dist/
+plotter_env/
+stronghold-plotter.spec
+tempCodeRunnerFile.cpp
+tempCodeRunnerFile.py
 
 .vscode/
 __pycache__/

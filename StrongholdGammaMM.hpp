@@ -44,21 +44,25 @@ namespace StrongholdAuxiliary
 
             uint32_t nextTick = tick ^ 1;
             double maxDelta = -std::numeric_limits<double>::infinity();
+            std::fill(gamma[nextTick], gamma[nextTick] + 1024, 0.0);
 
-            #pragma omp parallel for schedule(dynamic, 1) reduction(max:maxDelta)
+            #pragma omp parallel for schedule(dynamic, 16) reduction(+:gamma[nextTick][:1024])
+            for(int j = 0; j < static_cast<int>(pendingSets.size()); j++)
+            {
+                pendingSets[j].set.exists.forEachSetBit([&, nextTick, j](uint32_t nodeIndex){
+                    gamma[nextTick][nodeIndex] += setTotalAddend[j];
+                });
+            }
+
             for(int j = 0; j < static_cast<int>(nodeCount); j++)
             {
-                if(apperanceIndexes[j].empty())
+                if(gamma[nextTick][j] == 0)
                 {
                     gamma[nextTick][j] = 1;
                     continue;
                 }
                 
-                double totalDenominator = 0;
-                for(uint32_t k = 0; k < apperanceIndexes[j].size(); k++)
-                    totalDenominator += setTotalAddend[apperanceIndexes[j][k]];
-                
-                gamma[nextTick][j] = (winCount[j] + lambda) / (totalDenominator + lambda);
+                gamma[nextTick][j] = (winCount[j] + lambda) / (gamma[nextTick][j] + lambda);
                 double delta = std::abs(
                     std::log(std::max(gamma[nextTick][j], minGamma)) -
                     std::log(std::max(gamma[tick][j], minGamma))

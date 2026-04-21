@@ -7,7 +7,7 @@
 #include<cstring>
 #include<limits>
 #include<algorithm>
-#include"omp.h"
+#include"OpenMPWrapper.hpp"
 #include"PendingBitset.hpp"
 
 namespace StrongholdAuxiliary

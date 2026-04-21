@@ -7,7 +7,7 @@ namespace StrongholdStrucures
     using namespace StrongholdPieces;
     using namespace StrongholdObservations;
 
-    static constexpr double logp5 = -0.6931471805599453;
+    static constexpr double T = 0.8;
     template<nextPieceSelectionMethod method = vanilla>
     struct Stronghold
     {
@@ -24,7 +24,10 @@ namespace StrongholdStrucures
         bool generate(Xoshiro256pp& rng)
         {
             if constexpr(method == constraintRestricted)
+            {
                 std::cerr << "generate should not be called for constraintRestricted" << std::endl;
+                return false;
+            }
 
             while(true)
             {
@@ -144,7 +147,7 @@ namespace StrongholdStrucures
             {
                 int observationIndex = pendingIndexToObservationIndex[i];
                 if(observationIndex == -1)proposal[i] = 1;
-                else proposal[i] = generationContext.guidingInfo->nodeGamma[observationIndex];
+                else proposal[i] = std::pow(generationContext.guidingInfo->nodeGamma[observationIndex], T);
             }
             return proposal;
         }

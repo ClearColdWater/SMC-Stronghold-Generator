@@ -1,8 +1,13 @@
 # drafted with GPT-5.4
 
+import argparse
+
 import json
 import math
 from pathlib import Path
+
+import matplotlib
+matplotlib.use("Agg")
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -766,7 +771,7 @@ def plot_default_report(report, output_dir="plots", show=False):
             save_path=output_dir / "debug_nodeEmpiricalWinRate.png",
             cmap="inferno",
             cmap_range=(0.05, 1.0),
-            norm_type="power",
+            norm_type="linear",
             gamma=0.5,
             is_prob=True,
             value_fmt=".3f",
@@ -885,6 +890,23 @@ def plot_default_report(report, output_dir="plots", show=False):
     print(json.dumps(report["overall"], indent=2, ensure_ascii=False))
 
 
+def main():
+    parser = argparse.ArgumentParser(
+        description="Plot stronghold posterior statistics from a JSON report."
+    )
+    parser.add_argument(
+        "report",
+        nargs="?",
+        default="outputs/stronghold_stats.json",
+        help="path to the stats report JSON (default: outputs/stronghold_stats.json)"
+    )
+    parser.add_argument(
+        "-o", "--output-dir",
+        default="plots",
+        help="directory to write plot images (default: plots)"
+    )
+    args = parser.parse_args()
+    report = load_stats_report(args.report)
+    plot_default_report(report, output_dir=args.output_dir, show=False)
 if __name__ == "__main__":
-    report = load_stats_report("outputs/stronghold_stats_merged.json")
-    plot_default_report(report, output_dir="plots", show=False)
+    main()

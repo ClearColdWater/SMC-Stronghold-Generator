@@ -3,7 +3,7 @@
 #include"StrongholdStructure.hpp"
 #include"StrongholdGammaMM.hpp"
 #include<thread>
-#include"omp.h"
+#include"OpenMPWrapper.hpp"
 
 namespace StrongholdSMC
 {
