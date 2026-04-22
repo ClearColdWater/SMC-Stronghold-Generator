@@ -1,4 +1,5 @@
 This project is licensed under the MIT License.
+
 This file lists third-party components that are:
 - included directly in this repository,
 - bundled in certain binary distributions, or
@@ -6,9 +7,11 @@ This file lists third-party components that are:
 Not every release artifact contains every component listed below.
 The "applies to" field indicates when a component is relevant.
 Full license texts are provided in the licenses/ directory.
+
 =======================================
 Repository-included C++ dependencies
 =======================================
+
 Lyra
 - applies to: all source and binary distributions
 - origin: https://github.com/bfgroup/Lyra
@@ -21,9 +24,11 @@ nlohmann/json
 - license: MIT
 - full license can be found in:
   - licenses/nlohmann/json/LICENSE
+
 ====================================
 Windows bundled runtime libraries
 ====================================
+
 GCC runtime libraries
 - applies to: Windows binary releases built with MSYS2 UCRT64
 - origin: https://gcc.gnu.org/
@@ -37,6 +42,7 @@ GCC runtime libraries
 - full license texts can be found in:
   - licenses/gcc-libs/COPYING3
   - licenses/gcc-libs/COPYING.RUNTIME
+
 winpthreads runtime
 - applies to: Windows binary releases built with MSYS2 UCRT64
 - origin: https://www.mingw-w64.org/

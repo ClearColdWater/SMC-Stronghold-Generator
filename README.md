@@ -1,24 +1,73 @@
 # SMC-Stronghold-Generator
 
-Generates imaginary Minecraft strongholds that match a given observation without introducing bias.
+Generates imaginary Minecraft strongholds consistent with a given observation, without introducing sampling bias.
 
-The generated strongholds are not real strongholds corresponding to an actual Minecraft seed.
+This tool does **not** recover the unique real seed behind an observed stronghold.
 
-They are imaginary strongholds sampled from the equivalent random process under the supplied observation constraints.
+Instead, it samples **imaginary strongholds** from the corresponding conditional random process under the supplied observation constraints.
 
 This project is intended to help players evaluate which unexplored branches are more likely to be valuable, and by how much.
 
 It is not intended to recover the one and only possible seed from an observation.
 
-By default, the current `main.cpp` generates a demo observation, runs several sampling rounds, and writes merged statistics to `outputs/stronghold_stats_merged.json`.
-It is a simple experiment driver rather than a polished command-line interface.
-You may need to edit constants in source code for your own runs.
+## Releases and Platform Support
 
-## Compile arguments
+|   Platform   |    Release Contents    |                   Requirements                   |
+|--------------|------------------------|--------------------------------------------------|
+|  Windows x64 | CLI + Plotting Bundled |                       None                       |
+|   Linux x64  |      CLI Bundled       | Requires local Python 3 + `numpy` + `matplotlib` |
+|     macOS    |      CLI Bundled       | Requires local Python 3 + `numpy` + `matplotlib` |
 
-`g++ main.cpp -fopenmp -std=c++23 -O3 -o build/main.exe`
+## Quick Start
 
-The code contains scalar, AVX2, and AVX512 code paths for the bounding-box intersection routine, and selects the best available path at runtime on each machine.
+The demo mode automatically generates a valid observation and sample for it.
+
+### Windows
+
+1. Download and extract the Windows release ZIP.
+2. Open the extracted folder.
+3. Click the folder path bar in File Explorer.
+4. Type `cmd` and press Enter.
+5. Run:
+
+```bash
+stronghold-cli --demo --plot
+```
+
+### Linux / macOS
+
+1. Download and extract the release archive, then open a terminal in that folder.
+2. Install the required plotting dependencies:
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+*(If python3 is not installed, install it via your distribution's package manager, Homebrew, or python.org).*
+
+3. Run:
+
+```bash
+./stronghold-cli --demo --plot
+```
+
+---
+
+## Common commands
+
+(Note: The examples below use the Windows `stronghold-cli` command. On Linux/macOS, use `./stronghold-cli` instead.)
+
+### Run with your own observation file and plot
+
+```bash
+stronghold-cli "path/to/observation.json" --plot
+```
+
+### Show help
+
+```bash
+stronghold-cli -h
+```
 
 ---
 
@@ -37,36 +86,24 @@ An observation file is a JSON object with this overall structure:
             {
                 "ch": [1],
                 "customData": 0,
-                "determinedType": "STARTER_STAIRS",
-                "weights": {
-                    "STARTER_STAIRS": 1.0
-                }
+                "determinedType": "STARTER_STAIRS"
             },
             {
                 "branchGenerateWeights": [1.0, 0.0, 0.0, 0.0, "inf"],
                 "ch": [2, -1, -1, -1, 3],
                 "customData": 0,
-                "determinedType": "FIVE_WAY_CROSSING",
-                "weights": {
-                    "FIVE_WAY_CROSSING": 1.0
-                }
+                "determinedType": "FIVE_WAY_CROSSING"
             },
             {
                 "ch": [-2],
                 "customData": 0,
-                "determinedType": "PRISON_CELL",
-                "weights": {
-                    "PRISON_CELL": 1.0
-                }
+                "determinedType": "PRISON_CELL"
             },
             {
                 "branchGenerateWeights": ["inf", "inf", "inf"],
                 "ch": [-2, -2, -2],
                 "customData": 0,
-                "determinedType": "BRANCHABLE_CORRIDOR",
-                "weights": {
-                    "BRANCHABLE_CORRIDOR": 1.0
-                }
+                "determinedType": "BRANCHABLE_CORRIDOR"
             }
         ]
     }
@@ -183,6 +220,96 @@ In practice, `determinedType: "UNKNOWN"` nodes should be the leaves of the obser
 This is because you should not be able to have meaningful observation to a node's child when you don't even know the type of that node.
 
 So if a branch is genuinely unobserved, prefer `-2` over inventing fake child nodes.
+
+---
+
+### How to decide the branch index of each child
+
+#### No outgoing branch
+
+These do not have child nodes:
+
+- `SMALL_CORRIDOR`
+- `LIBRARY`
+- `PORTAL_ROOM`
+- `NONE`
+For these, write:
+
+```json
+"ch": []
+```
+
+#### Typically one outgoing branch
+
+These only use `ch[0]`:
+
+- `CHEST_CORRIDOR`
+- `LEFT_TURN`
+- `RIGHT_TURN`
+- `PRISON_CELL`
+- `SPIRAL_STAIRS`
+- `STRAIGHT_STAIRS`
+- `STARTER_STAIRS`
+
+For these, write:
+
+```json
+"ch": [123]
+```
+
+#### Up to three branches
+
+These generally use the first three slots(`ch[0], ch[1], ch[2]`):
+
+- `ROOM_CROSSING`
+- `BRANCHABLE_CORRIDOR`
+
+The forward branch is always branch `0`.
+The branch indexes for the left and right branches are directional.
+
+The branch facing the negative cardinal direction is always branch `1`;
+the branch facing the positive cardinal direction is always branch `2`,
+regardless of the negative branch generated or not.
+
+For example, you are in a `BRANCHABLE_CORRIDOR` room,
+going in from starter facing `SOUTH`(`positive Z`),
+the branch in front is naturally branch `0`.
+
+The branch on the left is facing `EAST`(`positive X`), so it is branch `2`;
+the branch on the right is facing `WEST`(`negative X`), so it is branch `1`.
+Even if the branch on the right was not even decided to generate
+(the bricks are not carved), the branch on the left is still branch `2`.
+
+---
+
+#### Up to five branches
+
+`FIVE_WAY_CROSSING` uses all five child slots.
+
+The forward branch is always branch `0`.
+The branch indexes for the other four branches are directional.
+
+The two branches in the same group(both on the left or right side) facing the negative cardinal direction are always branch `1` and `2`;
+the two branches in the same group(both on the left or right side) facing the positive cardinal direction are always branch `3` and `4`,
+regardless of other branches generated or not.
+
+Inside each group,
+The branch on the relative negative cardinal position is branch `x`;
+the branch on the relative positive cardinal position is branch `x + 1`,
+again regardless of other branches generated or not.
+
+For example, you are going in a `FIVE_WAY_CROSSING` from starter facing `SOUTH`(`positive Z`),
+the branch in front is naturally branch `0`.
+
+The branch on the left is facing `EAST`(`positive X`), so the two branches on the left are branch `3` and `4`;
+the branch on the right is facing `WEST`(`negative X`), so the two branches on the right are branch `1` and `2`.
+Even if none the branches on the right were not even decided to generate
+(the bricks are not carved), the branch on the left are still branch `3` and `4`.
+
+Then to decide which branch on the right is branch `1` and which is `2`,
+the bottom right branch is to the `NORTH`(`negative Z`) of the top right branch,
+so it will be branch `1` and the top right branch will be branch `2`.
+Similarly the bottom left branch is branch `3` and top left is branch `4`.
 
 ---
 
@@ -351,63 +478,6 @@ For readability, keep `weights` consistent with `determinedType`:
 
 ---
 
-## Branch Slot Count by Piece Type
-
-Different piece types use different numbers of branch slots.
-
-### Typically one outgoing branch
-
-These only use `ch[0]`:
-
-- `CHEST_CORRIDOR`
-- `LEFT_TURN`
-- `RIGHT_TURN`
-- `PRISON_CELL`
-- `SPIRAL_STAIRS`
-- `STRAIGHT_STAIRS`
-- `STARTER_STAIRS`
-
-For these, writing:
-
-```json
-"ch": [123]
-```
-
-is fine.
-
----
-
-### Typically no outgoing branch
-
-These usually do not need child nodes:
-
-- `SMALL_CORRIDOR`
-- `LIBRARY`
-- `PORTAL_ROOM`
-- `NONE`
-For these, write:
-
-```json
-"ch": []
-```
-
----
-
-### Up to three branches
-
-These generally use the first three slots:
-
-- `ROOM_CROSSING`
-- `BRANCHABLE_CORRIDOR`
-
----
-
-### Up to five branches
-
-- `FIVE_WAY_CROSSING`
-
----
-
 ## Minimal Recommended Example
 
 This is a minimal observation that still follows the recommendation of explicitly including the first two nodes.
@@ -421,19 +491,18 @@ This is a minimal observation that still follows the recommendation of explicitl
             {
                 "ch": [1],
                 "branchGenerateWeights": [1.0],
-                "determinedType": "STARTER_STAIRS",
-                "weights": {
-                    "STARTER_STAIRS": 1.0
-                }
+                "determinedType": "STARTER_STAIRS"
             },
             {
                 "ch": [-2, -2, -2, -2, -2],
-                "determinedType": "FIVE_WAY_CROSSING",
-                "weights": {
-                    "FIVE_WAY_CROSSING": 1.0
-                }
+                "determinedType": "FIVE_WAY_CROSSING"
             }
         ]
     }
 }
 ```
+
+## License
+
+This project is licensed under the [MIT license](./LICENSE).
+See also [third party notices](./THIRD_PARTY_NOTICES.txt) for bundled dependencies.

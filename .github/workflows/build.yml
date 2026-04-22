@@ -113,7 +113,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $pkgDir = "dist\stronghold-windows-x64"
+          $pkgDir = "dist\stronghold-cli-windows-x64"
           if (Test-Path $pkgDir) { Remove-Item $pkgDir -Recurse -Force }
           New-Item -ItemType Directory -Path $pkgDir | Out-Null
 
@@ -146,7 +146,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          Push-Location dist\stronghold-windows-x64
+          Push-Location dist\stronghold-cli-windows-x64
           try {
             .\stronghold-cli.exe --help | Out-Null
             .\stronghold-cli.exe --demo --plot --nodes 20 -n 1024 -r 1 --seed 1 --demo-seed 1 -o outputs\package-demo.json --plots plots\package-demo
@@ -165,7 +165,7 @@ jobs:
       - name: Clean staged package test outputs
         shell: pwsh
         run: |
-          $pkgDir = "dist\stronghold-windows-x64"
+          $pkgDir = "dist\stronghold-cli-windows-x64"
           Remove-Item "$pkgDir\outputs" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item "$pkgDir\plots" -Recurse -Force -ErrorAction SilentlyContinue
 
@@ -173,16 +173,16 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          if (Test-Path "dist\stronghold-windows-x64.zip") {
-            Remove-Item "dist\stronghold-windows-x64.zip" -Force
+          if (Test-Path "dist\stronghold-cli-windows-x64.zip") {
+            Remove-Item "dist\stronghold-cli-windows-x64.zip" -Force
           }
-          Compress-Archive -Path "dist\stronghold-windows-x64" -DestinationPath "dist\stronghold-windows-x64.zip"
+          Compress-Archive -Path "dist\stronghold-cli-windows-x64" -DestinationPath "dist\stronghold-cli-windows-x64.zip"
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: stronghold-windows-x64
-          path: dist/stronghold-windows-x64.zip
+          name: stronghold-cli-windows-x64
+          path: dist/stronghold-cli-windows-x64.zip
           if-no-files-found: error
           retention-days: 14
 
@@ -265,7 +265,7 @@ jobs:
       - name: Prepare staged package
         run: |
           set -euo pipefail
-          pkg="dist/stronghold-linux-x64"
+          pkg="dist/stronghold-cli-linux-x64"
           rm -rf "$pkg"
           mkdir -p "$pkg"
           install -m 755 build/stronghold-cli "$pkg/stronghold-cli"
@@ -286,7 +286,7 @@ jobs:
       - name: Self-test packaged Linux release
         run: |
           set -euo pipefail
-          pkg="dist/stronghold-linux-x64"
+          pkg="dist/stronghold-cli-linux-x64"
           pushd "$pkg"
           ./stronghold-cli --help >/dev/null
           ./stronghold-cli --demo --plot --nodes 20 -n 1024 -r 1 --seed 1 --demo-seed 1 -o outputs/package-demo.json --plots plots/package-demo
@@ -297,18 +297,18 @@ jobs:
       - name: Clean staged package test outputs
         run: |
           set -euo pipefail
-          rm -rf dist/stronghold-linux-x64/outputs dist/stronghold-linux-x64/plots
+          rm -rf dist/stronghold-cli-linux-x64/outputs dist/stronghold-cli-linux-x64/plots
 
       - name: Archive Linux artifact
         run: |
           set -euo pipefail
-          tar -czf dist/stronghold-linux-x64.tar.gz -C dist stronghold-linux-x64
+          tar -czf dist/stronghold-cli-linux-x64.tar.gz -C dist stronghold-cli-linux-x64
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
-          name: stronghold-linux-x64
-          path: dist/stronghold-linux-x64.tar.gz
+          name: stronghold-cli-linux-x64
+          path: dist/stronghold-cli-linux-x64.tar.gz
           if-no-files-found: error
           retention-days: 14
 
@@ -392,7 +392,7 @@ jobs:
       - name: Prepare staged package
         run: |
           set -euo pipefail
-          pkg="dist/stronghold-macos-arm64"
+          pkg="dist/stronghold-cli-macos-arm64"
           rm -rf "$pkg"
           mkdir -p "$pkg"
           install -m 755 build/stronghold-cli "$pkg/stronghold-cli"
@@ -413,7 +413,7 @@ jobs:
       - name: Self-test packaged macOS release
         run: |
           set -euo pipefail
-          pkg="dist/stronghold-macos-arm64"
+          pkg="dist/stronghold-cli-macos-arm64"
           pushd "$pkg"
           ./stronghold-cli --help >/dev/null
           ./stronghold-cli --demo --plot --nodes 20 -n 1024 -r 1 --seed 1 --demo-seed 1 -o outputs/package-demo.json --plots plots/package-demo
@@ -424,17 +424,17 @@ jobs:
       - name: Clean staged package test outputs
         run: |
           set -euo pipefail
-          rm -rf dist/stronghold-macos-arm64/outputs dist/stronghold-macos-arm64/plots
+          rm -rf dist/stronghold-cli-macos-arm64/outputs dist/stronghold-cli-macos-arm64/plots
 
       - name: Archive macOS artifact
         run: |
           set -euo pipefail
-          tar -czf dist/stronghold-macos-arm64.tar.gz -C dist stronghold-macos-arm64
+          tar -czf dist/stronghold-cli-macos-arm64.tar.gz -C dist stronghold-cli-macos-arm64
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: stronghold-macos-arm64
-          path: dist/stronghold-macos-arm64.tar.gz
+          name: stronghold-cli-macos-arm64
+          path: dist/stronghold-cli-macos-arm64.tar.gz
           if-no-files-found: error
           retention-days: 14
