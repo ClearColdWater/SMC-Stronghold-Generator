@@ -124,8 +124,16 @@ def get_metric_and_se(report, key):
     ses = []
 
     for node in report["nodes"]:
-        v = node.get(key, None)
-        val = np.nan if v is None else float(v)
+        if key == "portalSubtreeProbability":
+            support_w = float(node.get("supportWeight", 0.0))
+            portal_w = float(node.get("portalSubtreeWeight", np.nan))
+            if not np.isfinite(portal_w):
+                p_cond = float(node.get("portalSubtreeProbabilityConditional", 0.0))
+                portal_w = support_w * p_cond
+            val = portal_w / total_w
+        else:
+            v = node.get(key, None)
+            val = np.nan if v is None else float(v)
         vals.append(val)
 
         se = np.nan
@@ -145,10 +153,10 @@ def get_metric_and_se(report, key):
                 if N_total > 1:
                     se = math.sqrt(max(0.0, p * (1 - p)) / N_total)
 
-            elif key == "portalSubtreeProbabilityConditional":
+            elif key == "portalSubtreeProbability":
                 p = val
-                if N_i > 1:
-                    se = math.sqrt(max(0.0, p * (1 - p)) / N_i)
+                if N_total > 1:
+                    se = math.sqrt(max(0.0, p * (1 - p)) / N_total)
 
             elif key == "meanSubtreeRoomCountConditional":
                 if N_i > 1 and support_w > 0:
@@ -799,8 +807,8 @@ def plot_default_report(report, output_dir="plots", show=False):
             "vmax": None
         },
         {
-            "key": "portalSubtreeProbabilityConditional",
-            "title": "P(portal in subtree | node exists)",
+            "key": "portalSubtreeProbability",
+            "title": "P(portal in subtree)",
             "cmap": "inferno",
             "cmap_range": (0.1, 1.0),
             "norm_type": "power",
