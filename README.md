@@ -14,9 +14,9 @@ It is not intended to recover the one and only possible seed from an observation
 
 |                                                                 Platform                                                                    |    Release Contents    |                   Requirements                   |
 |:-------------------------------------------------------------------------------------------------------------------------------------------:|:----------------------:|:------------------------------------------------:|
-| [Windows x64](https://github.com/ClearColdWater/SMC-Stronghold-Generator/releases/download/v0.1.0-beta.1/stronghold-cli-windows-x64.zip)    | CLI + Plotting Bundled |                       None                       |
-| [Linux x64](https://github.com/ClearColdWater/SMC-Stronghold-Generator/releases/download/v0.1.0-beta.1/stronghold-cli-linux-x64.tar.gz)     |      CLI Bundled       | Requires local Python 3 + `numpy` + `matplotlib` |
-| [macOS arm64](https://github.com/ClearColdWater/SMC-Stronghold-Generator/releases/download/v0.1.0-beta.1/stronghold-cli-macos-arm64.tar.gz) |      CLI Bundled       | Requires local Python 3 + `numpy` + `matplotlib` |
+| [Windows x64](https://github.com/ClearColdWater/SMC-Stronghold-Generator/releases/download/v0.1.0-beta.2/stronghold-cli-windows-x64.zip)    | CLI + Plotting Bundled |                       None                       |
+| [Linux x64](https://github.com/ClearColdWater/SMC-Stronghold-Generator/releases/download/v0.1.0-beta.2/stronghold-cli-linux-x64.tar.gz)     |      CLI Bundled       | Requires local Python 3 + `numpy` + `matplotlib` |
+| [macOS arm64](https://github.com/ClearColdWater/SMC-Stronghold-Generator/releases/download/v0.1.0-beta.2/stronghold-cli-macos-arm64.tar.gz) |      CLI Bundled       | Requires local Python 3 + `numpy` + `matplotlib` |
 
 ## Quick Start
 
